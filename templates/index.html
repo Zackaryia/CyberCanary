@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-        <div class="block-title">
-            <h1>{% block title %} Welcome to CyberCanary! {% endblock %}</h1>
-        </div>
-        <div class="posts-container">
+    <div class="block-title">
+        <h1>{% block title %} Welcome to CyberCanary! {% endblock %}</h1>
+    </div>
+    <div class="posts-container">
+        <div class="posts-scrollable">
             {% for post in posts %}
                 <div class="post-item">
                     <a href="#">
@@ -12,29 +13,54 @@
                         <p>{{ post['content'] }}</p>
                     </a>
                     <span class="badge badge-primary">{{ post['created'] }}</span>
-                    <hr>
                 </div>
             {% endfor %}
         </div>
+    </div>
 
     <style>
-
         .block-title {
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e0e0e0; 
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
         }
 
         .posts-container {
-            /* Add any specific styling for the posts container if needed */
+            overflow: hidden; /* Hide overflow to prevent scrollbar */
+            white-space: nowrap;
+            padding: 20px 0;
+        }
+
+        .posts-scrollable {
+            display: inline-block;
+            animation: scrollPosts linear infinite;
+        }
+
+        @keyframes scrollPosts {
+            0% {
+                transform: translateX(100%); /* Start off-screen right */
+            }
+            100% {
+                transform: translateX(-100%); /* End off-screen left */
+            }
         }
 
         .post-item {
-            margin-bottom: 20px;
+            display: inline-block;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-right: 10px;
+            border-radius: 5px;
+            min-width: 250px;
+            vertical-align: top;
+            margin-bottom: 0;
         }
 
         .post-item h3 {
             color: #007bff;
+            margin-top: 0;
         }
 
         .post-item a {
@@ -42,17 +68,34 @@
             display: block;
         }
 
-        .post-item a:hover h3{
-          color: #0056b3;
+        .post-item a:hover h3 {
+            color: #0056b3;
         }
 
         .badge-primary {
             background-color: #007bff;
             color: white;
-        }
-
-        hr {
-            border-color: #e0e0e0;
+            margin-top: 10px;
+            display: inline-block;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const postsScrollable = document.querySelector('.posts-scrollable');
+            const postItems = document.querySelectorAll('.post-item');
+
+            if (postsScrollable && postItems.length > 0) {
+                const totalWidth = Array.from(postItems).reduce((acc, item) => acc + item.offsetWidth + 10, 0); // Calculate total width including margins
+                const containerWidth = document.querySelector('.posts-container').offsetWidth;
+
+                if (totalWidth > containerWidth) {
+                    const duration = totalWidth / 80; // Adjust speed (50 is pixels per second, adjust as needed)
+                    postsScrollable.style.animationDuration = `${duration}s`;
+                } else {
+                    postsScrollable.style.animation = 'none'; // Disable animation if content is not overflowing
+                }
+            }
+        });
+    </script>
 {% endblock %}

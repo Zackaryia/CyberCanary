@@ -2,11 +2,6 @@ import sqlite3
 from flask import Flask, render_template, request, url_for, flash, redirect, session
 from werkzeug.exceptions import abort
 
-#Task list:
-#make stuff prettier (again)
-#threat classes for each project, and threat class pages
-#figure out how to relate threat classes to multiple projects "the sql way"
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'password'
 user = None
