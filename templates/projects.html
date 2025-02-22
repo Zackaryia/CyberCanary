@@ -11,7 +11,7 @@
                         <h3>{{ project['title'] }}</h3>
                         <p>{{ project['stack'] }}</p>
                     </a>
-                    <a href="{{ url_for('edit', id=project['id']) }}">
+                    <a href="{{ url_for('edit', project_id=project['id']) }}">
                         <span class="edit-badge">Edit</span>
                     </a>
                     <hr>
