@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS accounts;
+
+CREATE TABLE projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    accountID INTEGER,
+    stack TEXT NOT NULL
+);
+
+CREATE TABLE accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    password PASSWORD NOT NULL
+)
