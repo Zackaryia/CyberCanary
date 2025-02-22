@@ -39,6 +39,10 @@ def setup_database():
             content TEXT,
             media TEXT,
             html_snapshot TEXT,
+            is_threat_reasoning TEXT,
+            is_threat BOOLEAN,
+            description TEXT,
+            threat_title TEXT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')

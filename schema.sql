@@ -20,7 +20,8 @@ CREATE TABLE posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     created TIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    content TEXT NOT NULL
+    content TEXT NOT NULL,
+    
 );
 
 CREATE TABLE projects (
