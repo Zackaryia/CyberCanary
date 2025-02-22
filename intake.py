@@ -10,6 +10,7 @@ import psycopg2
 from psycopg2 import sql
 from jetstream import jetstream
 from hashlib import sha256
+from base64 import urlsafe_b64encode
 import pypandoc
 import mimetypes
 import re
@@ -123,7 +124,7 @@ def download_url(link: str, folder: str):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    filename_base = sha256(link.encode()).hexdigest()
+    filename_base = urlsafe_b64encode(link.encode())
     
     try:
         response = requests.get(link, stream=True)

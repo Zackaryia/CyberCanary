@@ -1,7 +1,9 @@
 import json
 import multiprocessing
 import psycopg2
+import psycopg2.extras
 import time
+from base64 import urlsafe_b64decode
 
 # Database connection
 DB_PARAMS = {
@@ -36,8 +38,27 @@ def mark_task_as_completed(task_id):
 def process_ai_filter_task(task_id, task_data):
     """Dummy function to simulate AI filtering. Replace with your actual AI processing logic."""
     print(f"Processing AI filter task (ID: {task_id}): {task_data}")
-    ssh
-    time.sleep(2)  # Simulate processing time
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    cursor.execute("SELECT * FROM posts WHERE uid = %s;", (task_data,))
+    post = cursor.fetchone()
+    
+    linked_to_files = {}
+    for file in post['html_snapshots']:
+        if file.endswith(".md"):
+            filename = file.split("/")[1]
+            file_url = urlsafe_b64decode(filename.split(".")[0])
+            with open(filename) as f:
+                linked_to_files[file_url] = f.read()
+    
+    
+    print(post, linked_to_files)
+    cursor.close()
+    conn.close()
+
+
     print(f"Finished processing AI filter task (ID: {task_id}): {task_data}")
     mark_task_as_completed(task_id)
 
@@ -56,7 +77,7 @@ def process_queue_tasks():
                 mark_task_as_processing(task[0]) #mark tasks as processing before starting
                 multiprocessing.Process(target=process_ai_filter_task, args=task).start()
             # Use starmap to pass multiple arguments to the processing function
-            
+
         else:
             time.sleep(5)  # Wait for 5 seconds before checking again
 

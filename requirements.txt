@@ -38,8 +38,6 @@ jsonpointer==3.0.0
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 jupyter-events==0.12.0
-jupyterhub==5.2.1
-jupyterhub-ssh @ git+https://github.com/yuvipanda/jupyterhub-ssh.git@a054eda03fcc609b42c304a02b7a22dcf2b6c62b
 Mako==1.3.9
 markdownify==0.14.1
 MarkupSafe==3.0.2
