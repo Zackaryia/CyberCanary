@@ -1,6 +1,12 @@
 DROP TABLE IF EXISTS projects;
-DROP TABLE IF EXISTS accounts;
 DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS User;
+
+CREATE TABLE User (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL
+);
 
 CREATE TABLE posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,10 +20,4 @@ CREATE TABLE projects (
     title TEXT NOT NULL,
     accountID INTEGER,
     stack TEXT NOT NULL
-);
-
-CREATE TABLE accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL
 );

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% block title %} Edit "{{ project['title'] }}" {% endblock %}</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="title">Name</label>
+        <input type="text" name="title" placeholder="Project name" class="form-control" value="{{ request.form['title'] or project['title'] }}">
+        </input>
+    </div>
+
+    <div class="form-group">
+        <label for="stack">Stack</label>
+        <textarea name="stack" placeholder="Project stack"
+                  class="form-control">{{ request.form['stack'] or project['stack'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
+<hr>
+{% endblock %}
