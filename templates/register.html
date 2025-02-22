@@ -13,12 +13,13 @@
 
     <div class="form-group">
         <label for="password">Password</label>
-        <textarea name="password" placeholder="Password"
-                  class="form-control">{{ request.form['password'] }}</textarea>
+        <input type="text" name="password"
+               placeholder="Password" class="form-control"
+               value="{{ request.form['password'] }}"></input>
     </div>
     <div class="form-group">
         <button type="submit" class="btn btn-primary">Submit</button>
     </div>
 </form>
-<a href="{{ url_for('login') }}">Login</a>
+<a href="{{ url_for('login') }}">Already have an account? Login</a>
 {% endblock %}
