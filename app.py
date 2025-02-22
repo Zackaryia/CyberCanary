@@ -3,16 +3,21 @@ from flask import Flask, render_template, request, url_for, flash, redirect, ses
 from werkzeug.exceptions import abort
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+#Task list:
+#make stuff prettier
+#threat classes for each project, and threat class pages
+#figure out how to relate threat classes to multiple projects "the sql way"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'password'
+user = None
 
 @app.route('/')
 def index():
     conn = get_db_connection()
     posts = conn.execute('SELECT * FROM posts').fetchall()
     conn.close()
-    return render_template('index.html', posts=posts)
+    return render_template('index.html', posts=posts, user=user)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -21,16 +26,18 @@ def login():
         password = request.form['password']
         conn = get_db_connection()
         conn.row_factory = sqlite3.Row
-        user = conn.execute('SELECT * FROM User WHERE username = ?',(username,)).fetchone()
+        userinfo = conn.execute('SELECT * FROM User WHERE username = ?',(username,)).fetchone()
         conn.commit()
         conn.close()
-        print(user, username, password)
-        if user and user['password'] == password:
-            session['username'] = user['username']
-            session['user_id'] = user['id']
+        if userinfo and userinfo['password'] == password:
+            session['username'] = userinfo['username']
+            session['user_id'] = userinfo['id']
+            global user
+            user = userinfo['id']
             return redirect(url_for('projects'))
         else:
-            return 'Invalid username or password' #add page later to go back to login
+            flash('Invalid username or password')
+            return render_template('login.html')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -47,7 +54,8 @@ def register():
         if user is None:
             cursor.execute('INSERT INTO User (username, password) VALUES (?, ?)',(username, password))
         else:
-            return 'Username is taken' #add a page later with button to go back
+            flash('Username is taken!')
+            return render_template('register.html')
         conn.commit()
         conn.close()
         return redirect(url_for('login'))
@@ -57,6 +65,8 @@ def register():
 def logout():
     session.pop('username', None)
     session.pop('user_id', None)
+    global user
+    user = None
     return redirect(url_for('login'))
 
 @app.route('/projects')
@@ -66,14 +76,14 @@ def projects():
         conn = get_db_connection()
         projects = conn.execute('SELECT * FROM projects WHERE accountID = ?',(account_id,)).fetchall()
         conn.close()
-        return render_template('projects.html', projects=projects, username=session['username'], accountID=session['user_id'])
+        return render_template('projects.html', projects=projects, username=session['username'], accountID=session['user_id'], user=user)
     else:
         return redirect(url_for('login'))
 
 @app.route('/<int:project_id>')
 def project(project_id):
     project = get_project(project_id)
-    return render_template('project.html', project=project)
+    return render_template('project.html', project=project, user=user)
 
 @app.route('/create', methods=('GET', 'POST'))
 def create():
@@ -90,7 +100,7 @@ def create():
             conn.commit()
             conn.close()
             return redirect(url_for('projects'))
-    return render_template('create.html')
+    return render_template('create.html', user=user)
 
 @app.route('/<int:id>/edit', methods=('GET', 'POST'))
 def edit(id):
@@ -110,7 +120,7 @@ def edit(id):
             conn.close()
             return redirect(url_for('projects'))
 
-    return render_template('edit.html', project=project)
+    return render_template('edit.html', project=project, user=user)
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
