@@ -82,7 +82,14 @@ def projects():
 @app.route('/<int:project_id>')
 def project(project_id):
     project = get_project(project_id)
-    return render_template('project.html', project=project, user=user)
+    conn = get_db_connection()
+    threatsTemp = conn.execute('SELECT * FROM threats').fetchall()
+    threats = []
+    for threat in threatsTemp:
+        if relevant(project_id, threat):
+            threats.append(threat)
+    conn.close()
+    return render_template('project.html', project=project, user=user, threats=threats)
 
 @app.route('/create', methods=('GET', 'POST'))
 def create():
@@ -133,3 +140,12 @@ def get_project(project_id):
     if project is None:
         abort(404)
     return project
+
+def relevant(project_id, threat):
+    conn = get_db_connection()
+    project = conn.execute('SELECT * FROM projects WHERE id = ?',(project_id,)).fetchone()
+    if (project == None or threat == None):
+        return False
+    stack = project['stack']
+    conn.close()
+    return threat['title'].lower() in stack.lower()
