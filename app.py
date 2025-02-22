@@ -57,7 +57,7 @@ def get_project(project_id):
 def index():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute('SELECT * FROM projects')
+    cursor.execute('SELECT * FROM posts LIMIT 10')
     posts = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -90,7 +90,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
         if cursor.fetchone() is None:
             cursor.execute('INSERT INTO users (username, password) VALUES (%s, %s)', (username, password))
@@ -121,7 +121,7 @@ def projects():
         projects = cursor.fetchall()
         cursor.close()
         conn.close()
-        return render_template('projects.html', projects=projects, username=session['username'])
+        return render_template('projects.html', projects=projects, username=session['username'], user=user)
     return redirect(url_for('login'))
 
 @app.route('/create', methods=['GET', 'POST'])
@@ -171,6 +171,6 @@ def edit(project_id):
             return redirect(url_for('projects'))
     return render_template('edit.html', project=project, user=user)
 
-if __name__ == "__main__":
+if (__name__ == '__main__'):
     setup_database()
-    app.run("0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port="5001")
