@@ -1,10 +1,64 @@
 import sqlite3
 from flask import Flask, render_template, request, url_for, flash, redirect, session
 from werkzeug.exceptions import abort
+import json
+import multiprocessing
+import multiprocessing.process
+import time
+import feedparser
+import requests
+import os
+import psycopg2
+from psycopg2 import sql
+import psycopg2.extras
+from jetstream import jetstream
+from hashlib import sha256
+import pypandoc
+import mimetypes
+import re
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'password'
 user = None
+DB_PARAMS = {
+    "dbname": "cybercanary",
+    "user": "zack_db",
+    "password": "test",
+    "host": "127.0.0.1",
+    "port": "5432"
+}
+
+def get_postgresdb_connection():
+    conn = psycopg2.connect(**DB_PARAMS)
+    return conn
+
+def setup_database():
+    conn = get_postgresdb_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            accountID INTEGER,
+            stack TEXT
+        )
+    ''')
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def project_exists(cid):
+    conn = get_postgresdb_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM projects WHERE id = %s", (cid,))
+    exists = cursor.fetchone() is not None
+    cursor.close()
+    conn.close()
+    return exists
 
 @app.route('/')
 def index():
@@ -67,8 +121,10 @@ def logout():
 def projects():
     if 'username' and 'user_id' in session:
         account_id = session['user_id']
-        conn = get_db_connection()
-        projects = conn.execute('SELECT * FROM projects WHERE accountID = ?',(account_id,)).fetchall()
+        conn = get_postgresdb_connection()
+        cursor = conn.cursor(row_factory=psycopg2.extras.RealDictCursor)
+        projects = cursor.execute('SELECT * FROM projects WHERE accountID = %s',(account_id,)).fetchall()
+        cursor.close()
         conn.close()
         return render_template('projects.html', projects=projects, username=session['username'], accountID=session['user_id'], user=user)
     else:
@@ -96,8 +152,8 @@ def create():
             flash('Name of project is required!')
         else:
             account_id = session['user_id']
-            conn = get_db_connection()
-            conn.execute('INSERT INTO projects (title, stack, accountID) VALUES (?, ?, ?)',(title, stack, account_id))
+            conn = get_postgresdb_connection()
+            conn.execute('INSERT INTO projects (title, stack, accountID) VALUES (%s, %s, %s)',(title, stack, account_id))
             conn.commit()
             conn.close()
             return redirect(url_for('projects'))
@@ -115,8 +171,8 @@ def edit(id):
             flash('Title is required!')
         else:
             account_id = session['user_id']
-            conn = get_db_connection()
-            conn.execute('UPDATE projects SET title = ?, stack = ? WHERE id = ?',(title, stack, account_id))
+            conn = get_postgresdb_connection()
+            conn.execute('UPDATE projects SET title = %s, stack = %s WHERE id = %s',(title, stack, account_id))
             conn.commit()
             conn.close()
             return redirect(url_for('projects'))
@@ -129,18 +185,24 @@ def get_db_connection():
     return conn
 
 def get_project(project_id):
-    conn = get_db_connection()
-    project = conn.execute('SELECT * FROM projects WHERE id = ?',(project_id,)).fetchone()
+    conn = get_postgresdb_connection()
+    project = conn.execute('SELECT * FROM projects WHERE id = %s',(project_id,)).fetchone()
     conn.close()
     if project is None:
         abort(404)
     return project
 
 def relevant(project_id, threat):
-    conn = get_db_connection()
-    project = conn.execute('SELECT * FROM projects WHERE id = ?',(project_id,)).fetchone()
+    conn = get_postgresdb_connection()
+    cursor = conn.cursor(row_factory=psycopg2.extras.RealDictCursor)
+    project = cursor.execute('SELECT * FROM projects WHERE id = %s',(project_id,)).fetchone()
     if (project == None or threat == None):
         return False
     stack = project['stack']
     conn.close()
     return threat['title'].lower() in stack.lower()
+
+
+if __name__ == "__main__":
+    print("run app")
+    app.run("0.0.0.0", port=5000, debug=True)
