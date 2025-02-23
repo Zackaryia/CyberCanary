@@ -19,30 +19,6 @@ DB_PARAMS = {
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
-def setup_database():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS projects (
-            id SERIAL PRIMARY KEY,
-            title TEXT NOT NULL,
-            accountID INTEGER REFERENCES users(id),
-            stack TEXT
-        );
-        CREATE TABLE IF NOT EXISTS threats (
-            id SERIAL PRIMARY KEY,
-            title TEXT NOT NULL
-        );
-    ''')
-    conn.commit()
-    cursor.close()
-    conn.close()
-
 def get_project(project_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -175,6 +151,8 @@ def edit(project_id):
             return redirect(url_for('projects'))
     return render_template('edit.html', project=project, user=user)
 
-if (__name__ == '__main__'):
-    setup_database()
-    app.run(host="0.0.0.0", port="5001")
+def main():
+    app.run("0.0.0.0", port=5000, debug=True)
+
+if __name__ == "__main__":
+    main()

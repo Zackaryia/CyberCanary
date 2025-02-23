@@ -44,68 +44,40 @@ def mark_task_as_completed(task_id):
     cursor.close()
     conn.close()
 
-def process_ai_filter_task(task_id, task_data):
+def process_task_project_relation(task_id, post_id):
     """Dummy function to simulate AI filtering. Replace with your actual AI processing logic."""
-    print(f"Processing AI filter task (ID: {task_id}): {task_data}")
+    print(f"process_task_project_relation (ID: {task_id}): post_id {post_id}")
 
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    cursor.execute("SELECT * FROM posts WHERE uid = %s;", (task_data,))
+    cursor.execute("SELECT * FROM posts WHERE id = %s;", (post_id,))
     post = cursor.fetchone()
-    
-    post['html_snapshot'] = json.loads(post['html_snapshot'])
-    linked_to_files = {}
-    for file in post['html_snapshot']:
-        if file is not None and file.endswith(".md"):
-            filename = file.split("/")[1]
-            file_url = urlsafe_b64decode(filename.split(".")[0]).decode()
-            
-            with open(os.path.join(script_dir, file), "r") as f:
-                linked_to_files[file_url] = f.read(3000) # limit context size
-    
-    
-    threat_description = f"""
-    The following is a {post['source']} sourced intellegence report, it could be a user's post, a write up, an article, an RSS feed entry, or anything.
 
-    {json.dumps(post, default=json_serial)}
+    cursor.execute("SELECT * FROM projects;")
+    projects = cursor.fetchall()
 
-    Below are any urls accessed that had scrapeable content, Note: Some may not have relevant information or may not have the correct information scraped propperly.
-    Its in the format of a dictionary, with the key being the URL accessed, and the value being the retrieved information cleaned up into a .md like format.
+    for project in projects:
+        analysis = run_llama.ai_threat_project_relation(project, post)
 
-    {json.dumps(linked_to_files, default=json_serial)}
-    """
+        update_query = """
+            INSERT INTO projects_impacted(project_id, threat_id, impacted, does_impact_analysis, description_of_relation) VALUES (%s, %s, %s, %s, %s)
+        """
 
-    analysis = run_llama.ai_threat_analysis(threat_description)
-
-    update_query = """
-        UPDATE posts
-        SET is_threat_reasoning = %s,
-            is_threat = %s,
-            description = %s,
-            threat_title = %s
-        WHERE uid = %s;
-    """
-
-    # Execute update query
-    cursor.execute(update_query, (
-        analysis["analysis"], 
-        analysis["isThreat"], 
-        analysis["description"], 
-        analysis["title"], 
-        task_data
-    ))
-
-    if analysis["isThreat"]:
-        cursor.execute("INSERT INTO queue(data, task) VALUES (%s, %s)", (post['id'], "ai-threat-project-relation"))
+        # Execute update query
+        cursor.execute(update_query, (
+            project['id'],
+            post_id,
+            analysis["threat_impacts_project"], 
+            analysis["analysis"], 
+            analysis["description"], 
+        ))
 
     conn.commit()
 
     cursor.close()
     conn.close()
 
-
-    print(f"Finished processing AI filter task (ID: {task_id}): {task_data}")
     mark_task_as_completed(task_id)
 
 MAX_CONCURRENT_TASKS = 12  # Limit concurrent analyses
@@ -114,14 +86,14 @@ semaphore = multiprocessing.Semaphore(MAX_CONCURRENT_TASKS)
 def process_task_with_semaphore(task_id, data):
     """Wrapper function to acquire semaphore before processing the task."""
     with semaphore:  # Limits concurrent executions
-        process_ai_filter_task(task_id, data)  # Run task
+        process_task_project_relation(task_id, data)  # Run task
 
 def process_queue_tasks():
     """Continuously checks for and processes pending AI filter tasks using a process pool."""
     while True:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, data FROM queue WHERE task = 'ai-filter-for-threats' AND status = 'pending' LIMIT 10")
+        cursor.execute("SELECT id, data FROM queue WHERE task = 'ai-threat-project-relation' AND status = 'pending' LIMIT 10")
         tasks = cursor.fetchall()
         cursor.close()
         conn.close()

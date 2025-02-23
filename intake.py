@@ -28,47 +28,12 @@ DB_PARAMS = {
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
-def setup_database():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS posts (
-            id SERIAL PRIMARY KEY,
-            source TEXT,
-            uid TEXT UNIQUE,
-            content TEXT,
-            media TEXT,
-            html_snapshot TEXT,
-            is_threat_reasoning TEXT,
-            is_threat BOOLEAN,
-            description TEXT,
-            threat_title TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS queue (
-            id SERIAL PRIMARY KEY,
-            data TEXT UNIQUE,
-            task TEXT,
-            status TEXT DEFAULT 'pending',
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
-
 def add_to_queue(data, task):
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
         INSERT INTO queue (data, task) VALUES (%s, %s)
-        ON CONFLICT (data) DO NOTHING
     ''', (data, task))
     
     conn.commit()
@@ -124,7 +89,7 @@ def download_url(link: str, folder: str):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    filename_base = urlsafe_b64encode(link.encode())
+    filename_base = urlsafe_b64encode(link.encode()).decode()
     
     try:
         response = requests.get(link, stream=True)
@@ -161,7 +126,8 @@ def download_url(link: str, folder: str):
 
 # Function to clean and store data
 def clean_and_store_post(post):
-    print("cleaning and storing")
+    # print(post)
+
     cid = post.get("commit", {}).get("cid", "")
     if not cid or post_exists(cid):
         return
@@ -170,7 +136,6 @@ def clean_and_store_post(post):
     cursor = conn.cursor()
 
     extracted_info = extract_bsky_post_info(post)
-    print(json.dumps(extracted_info))
 
     text = post.get("commit", {}).get("record", {}).get("text", "")
     media_urls = [facet["features"][0]["uri"] for facet in post.get("commit", {}).get("record", {}).get("facets", []) if "uri" in facet["features"][0]]
@@ -193,15 +158,10 @@ def clean_and_store_post(post):
     
     add_to_queue(cid, "ai-filter-for-threats")
     print("BSKY:", extracted_info)
-    print(post)
     conn.commit()
     cursor.close()
     conn.close()
 
-# Function to process posts asynchronously
-def process_post(post):
-    process = multiprocessing.Process(target=clean_and_store_post, args=(post,))
-    process.start()
 
 # RSS feed fetching
 def fetch_rss_feeds():
@@ -378,7 +338,6 @@ def scan_bluesky_posts():
 
     for bsky_post in jetstream(collections=["app.bsky.feed.post"], yield_response=True, cursor=int((time.time()-1e5)*1e6)):
         bsky_post = json.loads(bsky_post)
-        # print(bsky_post)
         
         if "commit" not in bsky_post or "record" not in bsky_post["commit"] or "text" not in bsky_post["commit"]["record"]:
             continue
@@ -388,13 +347,12 @@ def scan_bluesky_posts():
             continue
 
         if post_contains_keywords(bsky_post["commit"]["record"]["text"], cybersecurity_keywords):
-            process_post(bsky_post)
+            multiprocessing.Process(target=clean_and_store_post, args=(bsky_post,)).start()
 
 
-
-if __name__ == "__main__":
-    print(0)
-    setup_database()
-    print(1)
+def main():
     multiprocessing.Process(target=scan_bluesky_posts).start()
     multiprocessing.Process(target=fetch_rss_feeds).start()
+
+if __name__ == "__main__":
+    main()
