@@ -3,7 +3,7 @@
 import requests
 import os, json
 
-def chat_with_llama3(messages, host=None, model="meta/llama-3.3-70b-instruct", max_tokens=8192):
+def chat_with_llama3(messages, host=None, model="meta/llama-3.3-70b-instruct", max_tokens=4096):
     host = host or os.getenv("LLAMA3HOST", "localhost")
     url = f"http://{host}:8000/v1/chat/completions"
 
@@ -35,14 +35,16 @@ def ai_threat_analysis(threat_description):
             {
                 "analysis": "Your analysis on the post, if it contains information that is a cyber threat that can be useful insight for companies and organizations."
                 "isThreat": boolean,
-                "description": "IF IT IS A CYBER THREAT then A description of the cyber threat, make it short with bullet points on what is the threat, how it affects businesses, and how they can respond",
-                "title": "IF IT IS A CYBER THREAT Title the cyber threat"
+                "description": "A description of the cyber threat, make it short with bullet points on what is the threat, how it affects businesses, and how they can respond",
+                "title": "Title the cyber threat"
             }
 
             The cyber threat must be a explot / intrusion / comprimise / other such threat that can tangibly hurt a corperation.
 
-            YOU MUST ALLWAYS RESPOND IN A VALID JSON OUTPUT, the description and title are only included if it is a cyber threat.
+            YOU MUST ALLWAYS RESPOND IN A VALID JSON OUTPUT.
+            Your response must start with a { and end with a } do not ask if the user needs any more help or any other nicities.
             Make sure to propperly escape all text inside of json outputs like return lines and quotes. When writing the JSON dont prettify the JSON output, no need to indent keys, or stuff like that.
+            Please respond only in english
             """
         },
         {
@@ -80,8 +82,8 @@ def ai_threat_project_relation(project, post):
                 "content": """You are a cybersecurity analyst that detects potential cyber threats in user posts and sees if they are impacting a project. Your responses MUST ALLWAYS be in the following format:
                 {
                     "analysis": "Your analysis on the potential cyber security threat, if it contains impacts this project and / or organization."
-                    "threat_impacts_project": boolean,
-                    "description": "IF THE THREAT IMPACTS THE PROJECT then A description of how the threat impacts this project, and in short with bullet points on what is the threat, how it affects businesses, and how they can respond",
+                    "threat_impacts_project": boolean, // If the project is not directly related then it is not impacted
+                    "description": "You dont need to include this if its not a threat, A description of how the threat impacts this project, and in short with bullet points on what is the threat, how it affects businesses, and how they can respond",
                 }
 
                 Base your analysis on the direct information given and what can reasonably be infered, not on guesses or tangential issues. 
@@ -89,7 +91,9 @@ def ai_threat_project_relation(project, post):
                 The cyber threat must be a explot / intrusion / comprimise / other such threat that can tangibly hurt a corperation.
 
                 YOU MUST ALLWAYS RESPOND IN A VALID JSON OUTPUT, the description and title are only included if it is a cyber threat.
+                Your response must start with a { and end with a } do not ask if the user needs any more help or any other nicities.
                 Make sure to propperly escape all text inside of json outputs like return lines and quotes. When writing the JSON dont prettify the JSON output, no need to indent keys, or stuff like that.
+                Please respond only in english
                 """
             },
             {
@@ -125,6 +129,7 @@ def ai_threat_project_relation(project, post):
         print("ERROR:!!:ECPET: ", e)
 
         print("ERROR:!!: ", result)
+        print(post)
         return {"analysis": "There was an error analysing this threat project relation.", "threat_impacts_project": False, "description": ""}
 
 

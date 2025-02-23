@@ -1,6 +1,10 @@
 Cyber Canary
 
-ssh -R 43022:localhost:22 test-ssh@143.215.184.28
+# DB connect
+postgresql://zack_db:test@127.0.0.1:5432/cybercanary
+
+# Restart DB
+systemctl restart postgresql.service
 
 # HOST
 systemctl start sshd

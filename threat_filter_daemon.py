@@ -108,7 +108,7 @@ def process_queue_tasks():
             time.sleep(5)  # Wait before checking again
 
 def main():
-    print(f"Using processes.")
+    print(f"Starting threat relation finder.")
     process_queue = multiprocessing.Process(target=process_queue_tasks)
     process_queue.start()
     print("AI filter task processor started.")

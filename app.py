@@ -158,7 +158,7 @@ def edit(project_id):
     return render_template('edit.html', project=project, user=user)
 
 def main():
-    app.run("0.0.0.0", port=5001, debug=True)
+    app.run("127.0.0.1", port=5001, debug=True)
 
 if __name__ == "__main__":
     main()

@@ -9,10 +9,6 @@ CREATE TABLE IF NOT EXISTS projects (
     accountID INTEGER REFERENCES users(id),
     stack TEXT
 );
-CREATE TABLE IF NOT EXISTS threats (
-    id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL
-);
 CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     source TEXT,

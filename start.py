@@ -22,41 +22,44 @@ DB_PARAMS = {
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
+
+if len(sys.argv) > 1:
+    print("RESETTING")
+    conn = get_db_connection()
+    cur: psycopg2.extensions.cursor = conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS posts;", ())
+    cur.execute("DROP TABLE IF EXISTS projects_impacted;", ())
+    cur.execute("DROP TABLE IF EXISTS queue;", ())
+
+    conn.commit()
+
+    # cur.execute("""
+    #     SELECT
+    #         pg_terminate_backend(pid) 
+    #     FROM 
+    #         pg_stat_activity 
+    #     WHERE 
+    #         -- don't kill my own connection!
+    #         pid <> pg_backend_pid()
+    #         -- don't kill the connections to other databases
+    #         AND datname = 'cybercanary';
+    #    """,
+    #     ()
+    # )
+
+    conn.commit()
+    conn.close()
+
 print("Adds new db stuff")
 with open("schema.sql", "r") as f:
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.executemany(f.read(), ())
+    cur.execute(f.read(), ())
     cur.close()
     conn.commit()
     conn.close()
 
 time.sleep(2)
-
-if len(sys.argv) > 1:
-    print("RESETTING")
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.executemany(
-        """SELECT
-            pg_terminate_backend(pid) 
-        FROM 
-            pg_stat_activity 
-        WHERE 
-            -- don't kill my own connection!
-            pid <> pg_backend_pid()
-            -- don't kill the connections to other databases
-            AND datname = 'cybercanary';
-            
-        DROP TABLE posts;
-        DROP TABLE projects_impacted;
-        DROP TABLE queue;
-        DROP TABLE threats;""",
-        ()
-    )
-    cur.close()
-    conn.commit()
-    conn.close()
 
 
 multiprocessing.Process(target=app.main).start()
