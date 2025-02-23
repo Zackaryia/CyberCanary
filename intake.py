@@ -169,13 +169,26 @@ def fetch_rss_feeds():
         # "https://www.darkreading.com/rss.xml",
         "https://krebsonsecurity.com/feed/",
         "https://threatpost.com/feed/",
-        "https://hnrss.org/newest"
+        "https://hnrss.org/newest",
+        "https://feeds.feedburner.com/TheHackersNews",
+        "https://www.grahamcluley.com/feed/",
+        "https://www.schneier.com/blog/atom.xml",
+        "https://www.csoonline.com/feed/",
+        "https://www.darkreading.com/rss/all.xml",
+        "https://www.troyhunt.com/rss/",
+        "http://feeds.feedburner.com/eset/blog",
+        "https://news.sophos.com/en-us/feed/",
+        "https://www.infosecurity-magazine.com/rss/news/"
     ]
     
     for feed_url in feeds:
-        feed = feedparser.parse(feed_url)
-        for entry in feed.entries:
-            store_rss_post(entry)
+        multiprocessing.Process(target=rss_get, args=(feed_url,)).start()
+
+def rss_get(feed_url):
+    feed = feedparser.parse(feed_url)
+    for entry in feed.entries:
+        store_rss_post(entry)
+
 
 # Function to check if an RSS post exists
 def rss_post_exists(link):
@@ -187,9 +200,22 @@ def rss_post_exists(link):
     conn.close()
     return exists
 
+def clean_rss(entry):
+    new_entry = {}
+
+    keep_fields = ['title', 'link', 'author', 'published', 'summary', 'tags', 'id']
+
+    for field in keep_fields:
+        if field in entry:
+            new_entry[field] = entry[field]
+
+    return new_entry
+
 # Function to clean and store RSS posts
 def store_rss_post(entry):
-    link = entry.link
+    link = entry['link']
+    entry = clean_rss(entry)
+
     if rss_post_exists(link):
         return
     
@@ -201,7 +227,7 @@ def store_rss_post(entry):
     cursor.execute("INSERT INTO posts (source, uid, content, html_snapshot) VALUES (%s, %s, %s, %s)",
                    ("rss", link, json.dumps(entry), json.dumps(html_snapshot)))
     
-    print("RSS:", entry.title, entry.link)
+    print("RSS:", entry['title'], entry['link'])
     add_to_queue(link, "ai-filter-for-threats")
 
     conn.commit()
@@ -310,21 +336,20 @@ def scan_bluesky_posts():
     cybersecurity_keywords = [
         "CyberSecurity", "InfoSec", "CyberThreats", "DataBreach", "ethical hacking",
         "threat intelligence", "PenTesting", "network security", "CyberAwareness", "phishing attacks",
-        "ransomware protection", "CyberAttack", "data privacy laws", "Malware", "zero trust architecture",
-        "cloud security", "Encryption", "security operations center", "digital forensics", "red team vs blue team",
-        "BlueTeam", "hacker news", "cyber defense strategies", "bug bounty programs", "risk assessment",
-        "threat hunting", "SecurityAnalyst", "security operations", "cyber threat landscape", "penetration testing",
-        "CISO", "cyber hygiene", "IoT security risks", "supply chain vulnerabilities", "security awareness training",
+        "ransomware protection", "#CyberAttack", "data privacy laws", "Malware", "zero trust architecture",
+        "cloud security", "security operations center", "digital forensics", "red team vs blue team",
+        "BlueTeam", "cyber defense strategies", "bug bounty programs", "risk assessment",
+        "threat hunting", "#SecurityAnalyst", "security operations", "cyber threat landscape", "penetration testing", "cyber hygiene", "IoT security risks", "supply chain vulnerabilities", "security awareness training",
         "IdentityTheft", "insider threats", "social engineering tactics", "MITRE ATT&CK framework", "cyber compliance",
         "RiskManagement", "dark web monitoring", "cyber forensics tools", "advanced persistent threats", "zero-day vulnerabilities",
-        "SIEM", "firewall configuration", "endpoint protection", "DDoS", "secure software development",
+        "firewall configuration", "endpoint protection", "DDoS", "secure software development",
         "DevSecOps best practices", "cyber trends", "security monitoring tools", "cloud security threats", "password managers",
         "ThreatActors", "insider threat detection", "mobile security", "web application security", "cyber law enforcement",
         "SOC 2 compliance", "NIST cybersecurity framework", "ISO 27001 certification", "PCI DSS compliance", "secure coding principles",
         "AI in cybersecurity", "nation-state cyber attacks", "threat modeling techniques", "common vulnerabilities and exposures", "cyber insurance policies",
         "CyberResilience", "bug bounty hunting", "red teaming vs blue teaming", "industrial control system", "SCADA security challenges",
         "ethical hacker mindset", "automating security processes", "deep web vs dark web", "cyber surveillance", "APT groups tactics",
-        "OSINT", "penetration tester skills", "threat intelligence feeds", "latest cybersecurity news", "deep web exploration",
+        "OSINT", "penetration tester skills", "threat intelligence feeds", "deep web exploration",
         "cyber terrorism threats", "cyber warfare tactics", "offensive security strategies", "cyber threat actors motivations", "vulnerability scanning tools",
         "security operations best practices", "SIEM deployment strategies", "cyber awareness campaigns", "malware analysis techniques",
         "blockchain security", "hacking toolkits", "cybersecurity job market", "security consulting services", "cybersecurity for small businesses"
@@ -355,4 +380,4 @@ def main():
     multiprocessing.Process(target=fetch_rss_feeds).start()
 
 if __name__ == "__main__":
-    main()
+    fetch_rss_feeds()

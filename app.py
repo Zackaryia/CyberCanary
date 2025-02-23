@@ -34,7 +34,7 @@ def get_project(project_id):
 def get_posts ():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute('SELECT * FROM posts LIMIT 10')
+    cursor.execute('SELECT * FROM posts ORDER BY id DESC LIMIT 20;')
     posts = cursor.fetchall()
     posts_content = []
     for post in posts:
@@ -162,7 +162,7 @@ def edit(project_id):
     return render_template('edit.html', project=project, user=user)
 
 def main():
-    app.run("127.0.0.1", port=5001, debug=True)
+    app.run("127.0.0.1", port=5002, debug=True)
 
 if __name__ == "__main__":
     main()
