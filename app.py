@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, request, url_for, flash, redirect, session
+from flask import Flask, render_template, request, url_for, flash, redirect, session, jsonify
 from werkzeug.exceptions import abort
 import json
 
@@ -30,18 +30,24 @@ def get_project(project_id):
         abort(404)
     return project
 
-@app.route('/')
-def index():
+@app.route('/posts')
+def get_posts ():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute('SELECT * FROM posts LIMIT 10')
     posts = cursor.fetchall()
     posts_content = []
     for post in posts:
-        posts_content.append(json.loads(post['content']))
+        temp = json.loads(post['content'])
+        temp['source'] = post['source']
+        posts_content.append(temp)
     cursor.close()
     conn.close()
-    return render_template('index.html', user=user, posts=posts_content)
+    return jsonify(posts_content)
+
+@app.route('/')
+def index():
+    return render_template('index.html', user=user)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -152,7 +158,7 @@ def edit(project_id):
     return render_template('edit.html', project=project, user=user)
 
 def main():
-    app.run("0.0.0.0", port=5000, debug=True)
+    app.run("0.0.0.0", port=5001, debug=True)
 
 if __name__ == "__main__":
     main()

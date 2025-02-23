@@ -5,16 +5,57 @@
 <h1>{% block title %} Welcome to CyberCanary! {% endblock %}</h1>
 <h3> See newest posts: </h3>
 </div>
-<div class="posts-container">
-{% for post in posts %}
-<div class="post-item">
-    <p> {{post['text']}} </p>
-    <span class="badge-primary">{{post['created_at']}}</span>
+<div id="posts-container">
 </div>
-<hr>
-{% endfor %}
-</div>
-
+<script>
+    async function fetchRecentPosts() {
+        try {
+          const response = await fetch('/posts'); // Replace with your API endpoint
+          console.log("API Response:", response); // Debugging
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const posts = await response.json();
+          console.log("Posts Data:", posts); // Debugging
+          displayPosts(posts); // Function to update the UI with fetched posts
+        } catch (error) {
+          console.error('Error fetching recent posts:', error);
+        }
+      }
+      
+      function displayPosts(posts) {
+        console.log("Displaying Posts:", posts); // Debugging
+        const postsContainer = document.getElementById('posts-container'); // Replace with your container's ID
+        console.log("Posts Container:", postsContainer); // Debugging
+        if (!postsContainer) {
+          console.error("Posts container not found.");
+          return;
+        }
+      
+        // Clear existing posts
+        postsContainer.innerHTML = '';
+      
+        // Display new posts
+        posts.forEach((post) => {
+          const postElement = document.createElement('div');
+          postElement.classList.add('post'); // Add styling if needed
+          console.log(post['text'])
+          postElement.innerHTML = `
+            <h3>From: ${post['source']}</h3>
+            <p>${post['text']}</p>
+            <p>Published: ${new Date(post['created_at']).toLocaleString()}</p>
+            <hr>`;
+          postsContainer.appendChild(postElement);
+        });
+      }
+      
+      // Polling approach (not ideal for real-time, but simple)
+      function startPolling() {
+        fetchRecentPosts(); // Initial fetch
+        setInterval(fetchRecentPosts, 5000); // Fetch every 5 seconds (adjust as needed)
+      }
+      startPolling();
+</script>
 <style>
 
 .block-title {
