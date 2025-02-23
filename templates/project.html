@@ -10,7 +10,7 @@
     <script>
         async function fetchRecentPosts() {
             try {
-              const response = await fetch('<int:project_id>/threats'); // Replace with your API endpoint
+              const response = await fetch('/{{ project_id }}/threats'); // Replace with your API endpoint
               if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
               }

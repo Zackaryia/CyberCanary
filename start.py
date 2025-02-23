@@ -59,7 +59,7 @@ with open("schema.sql", "r") as f:
     conn.commit()
     conn.close()
 
-time.sleep(2)
+time.sleep(0.5)
 
 
 multiprocessing.Process(target=app.main).start()

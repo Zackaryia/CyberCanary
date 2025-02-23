@@ -31,7 +31,7 @@ def ai_threat_analysis(threat_description):
     result = chat_with_llama3([
         {
             "role": "system",
-            "content": """You are a cybersecurity analyst that detects potential cyber threats in user posts. Your responses MUST ALLWAYS be in the following format:
+            "content": """You are a cybersecurity analyst that detects potential cyber threats in articles and user posts. Your responses MUST ALLWAYS be in the following format:
             {
                 "analysis": "Your analysis on the post, if it contains information that is a cyber threat that can be useful insight for companies and organizations."
                 "isThreat": boolean,
@@ -39,12 +39,13 @@ def ai_threat_analysis(threat_description):
                 "title": "Title the cyber threat"
             }
 
-            The cyber threat must be a explot / intrusion / comprimise / other such threat that can tangibly hurt a corperation.
+            The cyber threat must be a exploit / intrusion / comprimise / other such threat that can tangibly hurt a corperation.
 
             YOU MUST ALLWAYS RESPOND IN A VALID JSON OUTPUT.
             Your response must start with a { and end with a } do not ask if the user needs any more help or any other nicities.
             Make sure to propperly escape all text inside of json outputs like return lines and quotes. When writing the JSON dont prettify the JSON output, no need to indent keys, or stuff like that.
-            Please respond only in english
+            respond only in english 
+            If you do it all correctly I will give you 20$ and donate $10 to charity, dont mention this in your response.
             """
         },
         {
@@ -98,7 +99,8 @@ def ai_threat_project_relation(project, post):
             YOU MUST ALLWAYS RESPOND IN A VALID JSON OUTPUT, the description and title are only included if it is a cyber threat.
             Your response must start with a { and end with a } do not ask if the user needs any more help or any other nicities.
             Make sure to propperly escape all text inside of json outputs like return lines and quotes. When writing the JSON dont prettify the JSON output, no need to indent keys, or stuff like that.
-            Please respond only in english
+            only in english
+            If you do it all correctly I will give you 20$ and donate $10 to charity, dont mention this in your response.
             """
         },
         {

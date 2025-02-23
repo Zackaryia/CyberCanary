@@ -1,5 +1,13 @@
 Cyber Canary
 
+TODO
+- Fix report
+- Display in order threats
+- Link to data source in threat
+- 
+- Record Demo
+
+
 # DB connect
 postgresql://zack_db:test@127.0.0.1:5432/cybercanary
 

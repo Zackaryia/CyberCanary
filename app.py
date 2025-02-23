@@ -49,7 +49,16 @@ def get_posts ():
 def get_threats (project_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute('SELECT posts.threat_title, posts.description, projects_impacted.description_of_relation FROM projects_impacted JOIN posts ON projects_impacted.post_id = posts.id WHERE projects_impacted.project_id = %s;', project_id)
+    cursor.execute("""
+SELECT 
+    posts.threat_title, 
+    posts.description, 
+    projects_impacted.description_of_relation
+FROM projects_impacted
+JOIN posts ON projects_impacted.threat_id = posts.id
+WHERE projects_impacted.project_id = %s
+ORDER BY projects_impacted.id DESC;
+""", (project_id,))
     posts = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -141,7 +150,7 @@ def create():
 @app.route('/<int:project_id>')
 def project(project_id):
     project = get_project(project_id)
-    return render_template('project.html', project=project, user=user)
+    return render_template('project.html', project_id=project_id, project=project, user=user)
 
 @app.route('/<int:project_id>/edit', methods=['GET', 'POST'])
 def edit(project_id):
