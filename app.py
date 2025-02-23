@@ -53,7 +53,7 @@ def get_threats (project_id):
 SELECT 
     posts.threat_title, 
     posts.description, 
-    projects_impacted.description_of_relation
+    projects_impacted.does_impact_analysis
 FROM projects_impacted
 JOIN posts ON projects_impacted.threat_id = posts.id
 WHERE projects_impacted.project_id = %s

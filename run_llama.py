@@ -89,7 +89,7 @@ def ai_threat_project_relation(project, post):
             {
                 "analysis": "Your analysis on the potential cyber security threat, if it contains impacts this project and / or organization."
                 "threat_impacts_project": boolean, // If the project is not directly related then it is not impacted
-                "description": "You dont need to include this if its not a threat, A description of how the threat impacts this project, and in short with bullet points on what is the threat, how it affects businesses, and how they can respond",
+                "description": "If threat impacts project, provide a description of how the threat impacts this project, and in short with bullet points on what is the threat, how it affects businesses, and how they can respond",
             }
 
             Base your analysis on the direct information given and what can reasonably be infered, not on guesses or tangential issues. 
