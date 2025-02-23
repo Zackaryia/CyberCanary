@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS projects_impacted (
     id SERIAL PRIMARY KEY,
     project_id integer,
     threat_id integer,
-    impacted BOOLEAN,
     does_impact_analysis TEXT,
+    impacted BOOLEAN,
     description_of_relation TEXT
 );
 CREATE TABLE IF NOT EXISTS queue (

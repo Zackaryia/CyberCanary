@@ -126,7 +126,7 @@ def download_url(link: str, folder: str):
 
 # Function to clean and store data
 def clean_and_store_post(post):
-    # print(post)
+    print(post)
 
     cid = post.get("commit", {}).get("cid", "")
     if not cid or post_exists(cid):
@@ -218,15 +218,14 @@ def store_rss_post(entry):
 
     if rss_post_exists(link):
         return
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    
+
     html_snapshot = [download_url(link, "html")]
     cursor.execute("INSERT INTO posts (source, uid, content, html_snapshot) VALUES (%s, %s, %s, %s)",
                    ("rss", link, json.dumps(entry), json.dumps(html_snapshot)))
-    
+
     print("RSS:", entry['title'], entry['link'])
     add_to_queue(link, "ai-filter-for-threats")
 
@@ -250,10 +249,13 @@ def extract_bsky_post_info(post_data):
 
     extracted_info = {}
 
+    print(post_data)
+
     try:
         commit = post_data.get('commit')
         if commit:
             record = commit.get('record')
+            rev = commit.get('rev')
             if record:
                 extracted_info['text'] = record.get('text', None)
                 extracted_info['created_at'] = record.get('createdAt', None)
@@ -282,6 +284,7 @@ def extract_bsky_post_info(post_data):
 
         extracted_info['cid'] = commit.get('cid', None) if commit else None
         extracted_info['did'] = post_data.get('did', None)
+        extracted_info['link'] = f'https://bsky.app/profile/{extracted_info['did']}/post/{extracted_info['rev']}'
 
     except (AttributeError, KeyError, TypeError) as e:
         print(f"Error extracting data: {e}")
