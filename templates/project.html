@@ -5,22 +5,53 @@
     <h2>{% block title %} Threats to {{ project['title'] }}: {% endblock %}</h2>
     <h4>{{ project['stack'] }}</h4>
 </div>
-    <div class="threats-container">
-        {% if threats %}
-        {% for threat in threats%}
-            <div class="threat-item">
-                <a href="#">
-                    <h4>{{ threat['title'] }}</h4>
-                    <p>{{ threat['report'] }}</p>
-                </a>
-                <span class="badge badge-primary">{{ threat['created'] }}</span>
-                <hr>
-            </div>
-        {% endfor %}
-        {% else %}
-            <h4> No threats detected </h4>
-        {% endif %}
+    <div id="posts-container">
     </div>
+    <script>
+        async function fetchRecentPosts() {
+            try {
+              const response = await fetch('<int:project_id>/threats'); // Replace with your API endpoint
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              const posts = await response.json();
+              displayPosts(posts); // Function to update the UI with fetched posts
+            } catch (error) {
+              console.error('Error fetching recent posts:', error);
+            }
+          }
+          
+          function displayPosts(posts) {
+            const postsContainer = document.getElementById('posts-container'); // Replace with your container's ID
+            console.log("Posts Container:", postsContainer); // Debugging
+            if (!postsContainer) {
+              console.error("Posts container not found.");
+              return;
+            }
+          
+            // Clear existing posts
+            postsContainer.innerHTML = '';
+          
+            // Display new posts
+            posts.forEach((post) => {
+              const postElement = document.createElement('div');
+              postElement.classList.add('post'); // Add styling if needed
+              postElement.innerHTML = `
+                <h3>${post['threat_title']}</h3>
+                <p>Threat: ${post['description']}</p>
+                <p>Report: ${post['description_of_relation']}</p>
+                <hr>`;
+              postsContainer.appendChild(postElement);
+            });
+          }
+          
+          // Polling approach (not ideal for real-time, but simple)
+          function startPolling() {
+            fetchRecentPosts(); // Initial fetch
+            setInterval(fetchRecentPosts, 500); // Fetch every 0.5 seconds (adjust as needed)
+          }
+          startPolling();
+    </script>
     <style>
 
         .block-title {
