@@ -23,4 +23,83 @@
         }
       }
       
-      function displayP
+      function displayPosts(posts) {
+        console.log("Displaying Posts:", posts); // Debugging
+        const postsContainer = document.getElementById('posts-container'); // Replace with your container's ID
+        console.log("Posts Container:", postsContainer); // Debugging
+        if (!postsContainer) {
+          console.error("Posts container not found.");
+          return;
+        }
+      
+        // Clear existing posts
+        postsContainer.innerHTML = '';
+      
+        // Display new posts
+        posts.forEach((post) => {
+          const postElement = document.createElement('div');
+          postElement.classList.add('post'); // Add styling if needed
+          if (post['source'] == "bluesky") {
+          postElement.innerHTML = `
+            <h3>From: ${post['source']}</h3>
+            <p>${post['text']}</p>
+            <p>Published: ${new Date(post['created_at']).toLocaleString()}</p>
+            <hr>`;
+          postsContainer.appendChild(postElement);
+          } else if (post['source'] == "rss") {
+            postElement.innerHTML = `
+            <h3>From: ${post['source']}</h3>
+            <p> <ahref=${post['link']}></a> ${post['title']}</p>
+            <p>Published: ${new Date(post['published']).toLocaleString()}</p>
+            <hr>`;
+          postsContainer.appendChild(postElement);
+          }
+        });
+      }
+      
+      // Polling approach (not ideal for real-time, but simple)
+      function startPolling() {
+        fetchRecentPosts(); // Initial fetch
+        setInterval(fetchRecentPosts, 500); // Fetch every 0.5 seconds (adjust as needed)
+      }
+      startPolling();
+</script>
+<style>
+
+.block-title {
+margin-bottom: 20px;
+padding-bottom: 10px;
+border-bottom: 1px solid #e0e0e0;
+}
+
+.posts-container {
+/* Add any specific styling for the posts container if needed */
+}
+
+.post-item {
+margin-bottom: 20px;
+}
+
+.post-item h3 {
+color: #007bff;
+}
+
+.post-item a {
+text-decoration: none;
+display: block;
+}
+
+.post-item a:hover h3{
+color: #0056b3;
+}
+
+.badge-primary {
+background-color: #007bff;
+color: white;
+}
+
+hr {
+border-color: #e0e0e0;
+}
+</style>
+{% endblock %}
