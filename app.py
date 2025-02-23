@@ -2,6 +2,7 @@ import psycopg2
 import psycopg2.extras
 from flask import Flask, render_template, request, url_for, flash, redirect, session
 from werkzeug.exceptions import abort
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'password'
@@ -59,9 +60,12 @@ def index():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute('SELECT * FROM posts LIMIT 10')
     posts = cursor.fetchall()
+    posts_content = []
+    for post in posts:
+        posts_content.append(json.loads(post['content']))
     cursor.close()
     conn.close()
-    return render_template('index.html', posts=posts, user=user)
+    return render_template('index.html', user=user, posts=posts_content)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
